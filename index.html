@@ -318,6 +318,10 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
   <main id="view-tropp" hidden>
     <div class="grid" style="grid-template-columns:minmax(0,1fr)">
       <section class="card" style="max-width:680px;width:100%">
+        <div id="newmatch" hidden style="background:var(--in);color:#fff;border-radius:10px;padding:12px 14px;margin-bottom:12px">
+          <b style="font-family:var(--font-display);font-size:20px;text-transform:uppercase;letter-spacing:.02em">Ny kamp</b>
+          <p style="margin:4px 0 0">Huk av spillerne som skal være med, og trykk «Til kampen».</p>
+        </div>
         <h2>Spillerbibliotek <span class="note" id="rostercount"></span></h2>
         <p class="note" style="margin:0 0 8px">Hele laget ligger her. Huk av de som skal spille dagens kamp.</p>
         <div class="pickbar" id="pickbar"><span><b id="pickn">0</b> valgt til kampen</span><button class="btn small" type="button" id="btn-tokamp">Til kampen</button></div>
@@ -352,7 +356,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
         </details>
         <p class="status" id="storestatus"></p>
       </section>
-      <p class="note" style="max-width:680px;width:100%;text-align:center;margin:0">Versjon 29.09 kl. 11:08</p>
+      <p class="note" style="max-width:680px;width:100%;text-align:center;margin:0">Versjon 29.09 kl. 11:11</p>
     </div>
   </main>
 
@@ -451,7 +455,7 @@ if(!Array.isArray(S.goals))S.goals=[];if(typeof S.opp!=="number")S.opp=0;if(type
 if(!Array.isArray(S.planIn))S.planIn=[];if(!Array.isArray(S.planOut))S.planOut=[];if(!S.planN)S.planN=1;
 if(!Array.isArray(S.picked)){const ab=S.absent||[];S.picked=roster.map(p=>p.id).filter(id=>!ab.includes(id))}
 delete S.absent;
-let confirmWipe=false, delMatch=null, saveFlash=false, pickFor=null, editMode=false, rosterLive=false, db=null, sel=null, tab="kamp", confirmReset=false, confirmDel=null, lastSubKey="";
+let newMatch=false, confirmWipe=false, delMatch=null, saveFlash=false, pickFor=null, editMode=false, rosterLive=false, db=null, sel=null, tab="kamp", confirmReset=false, confirmDel=null, lastSubKey="";
 const save=()=>lsSet(SKEY,S);
 
 /* ---------- spillerlisten ---------- */
@@ -776,7 +780,7 @@ function renderRoster(){
   const n=roster.length, m=squad().length;
   $("rostercount").textContent=n?n+" spillere":"";
   $("tabcount").textContent=m?"("+m+")":"";
-  $("pickn").textContent=m;$("pickbar").hidden=!n;
+  $("pickn").textContent=m;$("pickbar").hidden=!n;$("newmatch").hidden=!newMatch;
   const q=($("rsearch").value||"").trim().toLowerCase();
   const sc=seasonCount();
   const shown=q?roster.filter(p=>p.name.toLowerCase().includes(q)||String(p.nr)===q):roster;
@@ -856,7 +860,7 @@ function renderSetup(){
   if(document.activeElement!==$("inp-len"))$("inp-len").value=S.halfLen;
   if(document.activeElement!==$("inp-halves"))$("inp-halves").value=S.halves;
   $("btn-reset").textContent=confirmReset?"Trykk igjen for å stoppe":"Stopp kamp";
-  $("btn-reset").className="btn danger"+(confirmReset?" pause":"");
+  $("btn-reset").className=confirmReset?"btn pause":"btn danger";
   $("btn-reset").hidden=!(S.halfClock>0||S.total>0||S.goals.length||S.opp);
 }
 function render(){
@@ -974,7 +978,7 @@ document.addEventListener("contextmenu",e=>{if(e.target.closest("[data-src]"))e.
 
 /* ---------- kontroller ---------- */
 $("startbtn").onclick=startStop;
-$("tab-kamp").onclick=()=>{tab="kamp";render()};
+$("tab-kamp").onclick=()=>{tab="kamp";newMatch=false;render()};
 $("tab-tropp").onclick=()=>{tab="tropp";sel=null;pickFor=null;render()};
 $("tab-hist").onclick=()=>{tab="hist";sel=null;pickFor=null;render()};
 $("btn-save").onclick=saveMatch;
@@ -1000,7 +1004,9 @@ $("btn-reset").onclick=()=>{
   if(!S.matchId){const ids=new Set(S.goals.map(g=>g.id));
     if(db){ids.forEach(id=>{db.collection("goals").doc(id).delete().catch(()=>{})})}
     else{seasonGoals=seasonGoals.filter(g=>!ids.has(g.id));lsSet(GKEY,seasonGoals)}}
-  Object.assign(S,{half:1,halfClock:0,total:0,running:false,times:{},undo:null,goals:[],opp:0,oppName:"",matchId:null,matchDate:null,planIn:[],planOut:[]});save();render();
+  Object.assign(S,{half:1,halfClock:0,total:0,running:false,times:{},undo:null,goals:[],opp:0,oppName:"",matchId:null,matchDate:null,planIn:[],planOut:[],picked:[]});
+  S.slots=freshSlots(S.format,S.formation);sel=null;pickFor=null;newMatch=true;tab="tropp";
+  save();render();window.scrollTo(0,0);
 };
 $("btn-wipe").onclick=async()=>{
   if(!confirmWipe){confirmWipe=true;$("btn-wipe").textContent="Trykk igjen – alt slettes";$("btn-wipe").className="btn pause";setTimeout(()=>{confirmWipe=false;renderHist()},4000);return}
@@ -1014,7 +1020,7 @@ $("btn-all").onclick=()=>{S.picked=roster.map(p=>p.id);save();render()};
 $("btn-none").onclick=()=>{S.picked=[];save();render()};
 $("rsearch").addEventListener("input",renderRoster);
 $("btn-edit").onclick=()=>{editMode=!editMode;confirmDel=null;$("btn-edit").textContent=editMode?"Ferdig":"Rediger liste";renderRoster()};
-$("btn-tokamp").onclick=()=>{tab="kamp";$("rsearch").value="";render();window.scrollTo(0,0)};
+$("btn-tokamp").onclick=()=>{tab="kamp";newMatch=false;$("rsearch").value="";render();window.scrollTo(0,0)};
 $("roster").addEventListener("change",e=>{
   const id=e.target.dataset.toggle;if(!id)return;
   S.picked=S.picked.filter(x=>x!==id);if(e.target.checked)S.picked.push(id);
@@ -1041,7 +1047,7 @@ connectDb();
 </script>
 <script>
 (function(){
-  var APP_VERSION="20260929110812";
+  var APP_VERSION="20260929111134";
   function check(){
     fetch(location.pathname+"?check="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():""}).then(function(t){
       var m=t.match(/APP_VERSION="(\d+)"/);
