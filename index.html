@@ -104,6 +104,58 @@ input[type=number]{width:74px}
 .hint .btn{min-height:32px;padding:4px 10px;font-size:13px;background:#fff;color:#12201a;border-color:#fff}
 .pitchbar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 
+/* Stilling og mål */
+.scoreline{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.score{display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-variant-numeric:tabular-nums}
+.score .team{font-size:15px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.score .num{font-size:36px;font-weight:700;line-height:1;min-width:28px;text-align:center}
+.score .dash{font-size:28px;color:var(--muted)}
+.goalbtns{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.goalbtns .btn{flex:1 1 130px}
+.btn.goal{background:var(--in);color:#fff;border-color:var(--in)}
+#opp-name{flex:1 1 120px;min-width:0}
+.goals{list-style:none;margin:10px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
+.goals li{display:flex;align-items:center;gap:10px;font-size:14px;padding:4px 0;border-top:1px solid var(--line)}
+.goals li:first-child{border-top:0}
+.goals .min{font-family:var(--font-display);font-variant-numeric:tabular-nums;color:var(--muted);width:34px;text-align:right;font-size:16px}
+.goals .gn{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.goals .gn.them{color:var(--out);font-weight:500}
+.goals .rm{border:0;background:transparent;color:var(--muted);font-size:13px;padding:4px 6px;border-radius:6px}
+.goals .rm:hover{color:var(--out)}
+.ball{display:inline-grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:var(--fg);color:var(--bg);font:700 12px/1 var(--font-body)}
+.slot .nm .ball{margin-left:3px;height:16px;min-width:16px;font-size:10px;background:#fff;color:#15211a}
+.scorers{display:flex;flex-direction:column;gap:6px}
+.scorer{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center}
+.scorer .rank{font:700 16px/1 var(--font-display);color:var(--muted);text-align:right}
+.scorer .sn{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scorer .sc{font:700 22px/1 var(--font-display);font-variant-numeric:tabular-nums}
+
+/* Kamphistorikk */
+.savebar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+.savebar .note{flex:1 1 160px}
+.savebar.done .note{color:var(--in);font-weight:600}
+.hsum{display:flex;gap:14px;flex-wrap:wrap;align-items:baseline}
+.hsum .big{font:700 30px/1 var(--font-display);font-variant-numeric:tabular-nums}
+.hsum .lab{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
+.hsum > div{display:flex;flex-direction:column;gap:3px}
+.opp{border-top:1px solid var(--line)}
+.opp:first-of-type{border-top:0}
+.opp summary{list-style:none;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:12px 2px;color:var(--fg)}
+.opp summary::-webkit-details-marker{display:none}
+.opp summary .on{font-family:var(--font-display);font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.opp summary .rec{display:flex;gap:4px}
+.opp summary .meta{grid-column:1/-1;font-size:13px;color:var(--muted);font-weight:500}
+.res{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:6px;font:700 13px/1 var(--font-body);color:#fff}
+.res.S{background:var(--in)} .res.U{background:var(--muted)} .res.T{background:var(--out)}
+.mlist{display:flex;flex-direction:column;gap:8px;padding:0 0 12px}
+.m{background:var(--surface2);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.m .mh{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.m .ms{font:700 22px/1 var(--font-display);font-variant-numeric:tabular-nums}
+.m .md{color:var(--muted);font-size:13px}
+.m .mx{font-size:13.5px}
+.m .mx b{font-weight:600}
+.m .mdel{margin-left:auto}
+
 /* Benk */
 #bench{min-height:64px}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -189,12 +241,25 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" id="tab-kamp" aria-selected="true" type="button">Kamp</button>
       <button class="tab" role="tab" id="tab-tropp" aria-selected="false" type="button">Tropp <span class="count" id="tabcount"></span></button>
+      <button class="tab" role="tab" id="tab-hist" aria-selected="false" type="button">Kamper</button>
     </div>
   </header>
 
   <main id="view-kamp">
     <div class="grid">
       <div class="col">
+        <section class="card" id="scorecard">
+          <div class="scoreline">
+            <div class="score" aria-live="polite"><span class="team">Søreide</span><span class="num" id="sc-us">0</span><span class="dash">–</span><span class="num" id="sc-them">0</span></div>
+            <input type="text" id="opp-name" placeholder="Motstander" aria-label="Motstander" autocomplete="off" list="opps"><datalist id="opps"></datalist>
+          </div>
+          <div class="goalbtns">
+            <button class="btn goal" type="button" id="btn-goal-us">Mål Søreide</button>
+            <button class="btn" type="button" id="btn-goal-them">Mål motstander</button>
+          </div>
+          <ul class="goals" id="goallist"></ul>
+          <div class="savebar" id="savebar"><span class="note" id="savenote">Lagre kampen når den er ferdig, så havner den i historikken under Kamper.</span><button class="btn small" type="button" id="btn-save">Lagre kampen</button></div>
+        </section>
         <div class="card">
           <div class="setup">
             <div class="field"><label for="sel-format">Spillform</label>
@@ -263,6 +328,10 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
         <div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn small ghost" type="button" id="btn-edit">Rediger liste</button></div>
       </section>
       <section class="card" style="max-width:680px;width:100%">
+        <h2>Toppscorere <span class="note" id="seasonnote"></span></h2>
+        <div class="scorers" id="scorers"></div>
+      </section>
+      <section class="card" style="max-width:680px;width:100%">
         <h2>Legg til spiller</h2>
         <form class="addrow" id="addform" autocomplete="off">
           <input type="text" name="nr" id="add-nr" placeholder="Nr" inputmode="numeric" aria-label="Draktnummer">
@@ -279,16 +348,30 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
       </section>
     </div>
   </main>
+
+  <main id="view-hist" hidden>
+    <div class="grid" style="grid-template-columns:minmax(0,1fr)">
+      <section class="card" style="max-width:680px;width:100%">
+        <h2>Sesongen så langt</h2>
+        <div class="hsum" id="hsum"></div>
+      </section>
+      <section class="card" style="max-width:680px;width:100%">
+        <h2>Motstandere <span class="note" id="histnote"></span></h2>
+        <input type="text" class="rsearch" id="hsearch" placeholder="Søk etter lag" aria-label="Søk etter lag" autocomplete="off">
+        <div id="hist"></div>
+      </section>
+    </div>
+  </main>
 </div>
 
 <script>
 (function(){
 const FORMATS = {
-  "5": {name:"5er-fotball", n:5, def:"2-2", len:20, halves:2, forms:{
+  "5": {name:"5er-fotball", n:5, def:"2-2", len:30, halves:2, forms:{
     "2-2":[["K",50,92],["VB",30,68],["HB",70,68],["VS",30,34],["HS",70,34]],
     "1-2-1":[["K",50,92],["MS",50,72],["VM",20,50],["HM",80,50],["S",50,28]]
   }},
-  "7": {name:"7er-fotball", n:7, def:"2-3-1", len:25, halves:2, forms:{
+  "7": {name:"7er-fotball", n:7, def:"2-3-1", len:30, halves:2, forms:{
     "2-3-1":[["K",50,92],["VB",32,73],["HB",68,73],["VM",16,49],["SM",50,52],["HM",84,49],["S",50,25]],
     "3-2-1":[["K",50,92],["VB",18,72],["MS",50,75],["HB",82,72],["VM",33,49],["HM",67,49],["S",50,25]],
     "2-1-2-1":[["K",50,92],["VB",30,75],["HB",70,75],["DM",50,58],["VK",18,40],["HK",82,40],["S",50,23]],
@@ -313,7 +396,7 @@ function freshSlots(format,form,prev){
 }
 function defaultState(){
   const f="7";return {format:f,formation:FORMATS[f].def,halfLen:FORMATS[f].len,halves:2,half:1,halfClock:0,total:0,running:false,lastTs:0,
-    slots:freshSlots(f,FORMATS[f].def),times:{},picked:[],undo:null,planN:1,planIn:[],planOut:[]};
+    slots:freshSlots(f,FORMATS[f].def),times:{},picked:[],undo:null,len30:1,goals:[],opp:0,oppName:"",matchId:null,matchDate:null,planN:1,planIn:[],planOut:[]};
 }
 let S=Object.assign(defaultState(),lsGet(SKEY)||{});
 if(!FORMATS[S.format]||!FORMATS[S.format].forms[S.formation]){S=defaultState();}
@@ -326,7 +409,24 @@ const DEFAULT_ROSTER=[
   {id:"p-olav",name:"Olav Skaar Ottesen",nr:""},
   {id:"p-jesper",name:"Jesper Engen",nr:""},
   {id:"p-sebastian",name:"Sebastian Hanøy Grimstad",nr:""},
-  {id:"p-christopher",name:"Christopher Ebbesvik",nr:""}
+  {id:"p-christopher",name:"Christopher Ebbesvik",nr:""},
+  {id:"p-marcus-nordgulen-berntsen",name:"Marcus Nordgulen Berntsen",nr:""},
+  {id:"p-marcus-nordvik",name:"Marcus Nordvik",nr:""},
+  {id:"p-elias-leonard-tran",name:"Elias Leonard Tran",nr:""},
+  {id:"p-muhammed-jaw",name:"Muhammed Jaw",nr:""},
+  {id:"p-haakon-rostad-enes",name:"Håkon Rostad Enes",nr:""},
+  {id:"p-emil-aareskjold-godo",name:"Emil Aareskjold Godø",nr:""},
+  {id:"p-felix-storheim",name:"Felix Storheim",nr:""},
+  {id:"p-kristian-hjelmeseter",name:"Kristian Hjelmeseter",nr:""},
+  {id:"p-snorre-ozols-jansen",name:"Snorre Ozols Jansen",nr:""},
+  {id:"p-william-arefjord",name:"William Arefjord",nr:""},
+  {id:"p-jacob-wulf-skretting",name:"Jacob Wulf Skretting",nr:""},
+  {id:"p-vegard-valen-wingaard",name:"Vegard Valen Wingaard",nr:""},
+  {id:"p-jacob-vaagenes",name:"Jacob Vågenes",nr:""},
+  {id:"p-william-skotsund-wedervang",name:"William Skotsund Wedervang",nr:""},
+  {id:"p-haakon-hammer-hoydal",name:"Håkon Hammer Høydal",nr:""},
+  {id:"p-arshath-karthikeyan",name:"Arshath Karthikeyan",nr:""},
+  {id:"p-theodor-heggelund-kraakaas",name:"Theodor Heggelund Kråkås",nr:""}
 ];
 const XKEY="soreide2015-extra-v1", HKEY="soreide2015-hidden-v1";
 function localRoster(){
@@ -334,10 +434,12 @@ function localRoster(){
   return [...DEFAULT_ROSTER.filter(p=>!hidden.includes(p.id)).map(p=>({...p})),...extra].filter(p=>p&&p.id&&p.name);
 }
 let roster=localRoster();
+if(!S.len30){if(S.halfLen!==30&&!S.total&&!S.running)S.halfLen=30;S.len30=1}
+if(!Array.isArray(S.goals))S.goals=[];if(typeof S.opp!=="number")S.opp=0;if(typeof S.oppName!=="string")S.oppName="";
 if(!Array.isArray(S.planIn))S.planIn=[];if(!Array.isArray(S.planOut))S.planOut=[];if(!S.planN)S.planN=1;
 if(!Array.isArray(S.picked)){const ab=S.absent||[];S.picked=roster.map(p=>p.id).filter(id=>!ab.includes(id))}
 delete S.absent;
-let pickFor=null, editMode=false, rosterLive=false, db=null, sel=null, tab="kamp", confirmReset=false, confirmDel=null, lastSubKey="";
+let delMatch=null, saveFlash=false, pickFor=null, editMode=false, rosterLive=false, db=null, sel=null, tab="kamp", confirmReset=false, confirmDel=null, lastSubKey="";
 const save=()=>lsSet(SKEY,S);
 
 /* ---------- spillerlisten ---------- */
@@ -367,6 +469,48 @@ async function deletePlayer(id){
   S.picked=S.picked.filter(x=>x!==id);
   S.slots.forEach(s=>{if(s.pid===id)s.pid=null});save();render();
 }
+const MKEY="soreide2015-matches-v1";
+let matches=(lsGet(MKEY)||[]).filter(m=>m&&m.id);
+const today=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+async function saveMatch(){
+  if(!S.oppName){$("savenote").textContent="Skriv navnet på motstanderen først, så dere finner kampen igjen.";$("opp-name").focus();return}
+  if(!S.matchId){S.matchId="m"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);S.matchDate=today()}
+  const played={};squad().forEach(p=>{if(T(p.id)>0)played[p.id]=Math.round(T(p.id))});
+  const doc={date:S.matchDate,opp:S.oppName,us:S.goals.filter(g=>!g.them).length,them:S.opp,
+    goals:S.goals.filter(g=>!g.them).map(g=>({pid:g.pid||null,min:g.min})),oppMins:S.goals.filter(g=>g.them).map(g=>g.min),
+    played,format:S.format,formation:S.formation,saved:Date.now()};
+  save();
+  if(db){try{await db.collection("matches").doc(S.matchId).set(doc)}catch(e){$("savenote").textContent="Kampen ble ikke lagret. Sjekk nettet og prøv igjen.";return}}
+  else{matches=matches.filter(m=>m.id!==S.matchId);matches.push({id:S.matchId,...doc});lsSet(MKEY,matches)}
+  saveFlash=true;render();setTimeout(()=>{saveFlash=false;renderScore()},4000);
+}
+async function deleteMatch(id){
+  if(db){try{await db.collection("matches").doc(id).delete()}catch(e){return}}
+  else{matches=matches.filter(m=>m.id!==id);lsSet(MKEY,matches)}
+  if(S.matchId===id){S.matchId=null;S.matchDate=null;save()}
+  delMatch=null;render();
+}
+const GKEY="soreide2015-goals-v1";
+let seasonGoals=(lsGet(GKEY)||[]).filter(g=>g&&g.id&&g.pid);
+function matchMinute(){return Math.floor(((S.half-1)*S.halfLen*60+S.halfClock)/60)+1}
+async function addGoal(pid){
+  const g={id:"g"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),pid:pid||null,min:matchMinute()};
+  S.goals.push(g);pickFor=null;save();render();
+  if(!pid)return;
+  const doc={pid,date:new Date().toISOString().slice(0,10),opp:S.oppName||"",min:g.min};
+  if(db){try{await db.collection("goals").doc(g.id).set(doc)}catch(e){setStatus("Målet ble lagret i kampen, men ikke i sesongoversikten. Prøv igjen.")}}
+  else{seasonGoals.push({id:g.id,...doc});lsSet(GKEY,seasonGoals);render()}
+}
+async function removeGoal(id){
+  const g=S.goals.find(x=>x.id===id);
+  if(g&&g.them){S.opp=Math.max(0,S.opp-1)}
+  S.goals=S.goals.filter(x=>x.id!==id);save();render();
+  if(!g||!g.pid)return;
+  if(db){try{await db.collection("goals").doc(id).delete()}catch(e){}}
+  else{seasonGoals=seasonGoals.filter(x=>x.id!==id);lsSet(GKEY,seasonGoals);render()}
+}
+function oppGoal(){S.opp++;S.goals.push({id:"o"+Date.now().toString(36),them:true,min:matchMinute()});save();render()}
+function seasonCount(){const c={};seasonGoals.forEach(g=>{c[g.pid]=(c[g.pid]||0)+1});return c}
 function setStatus(t){$("storestatus").textContent=t}
 
 function connectDb(){
@@ -475,20 +619,24 @@ function renderClock(){
 }
 function renderField(){
   const {outs}=planSets();
+  const mg={};S.goals.forEach(g=>{if(g.pid)mg[g.pid]=(mg[g.pid]||0)+1});
   $("slots").innerHTML=S.slots.map((s,i)=>{
     const p=s.pid&&byId(s.pid);
     const isSel=sel&&(sel.t==="field"||sel.t==="empty")&&sel.i===i;
     if(p){
       return `<div class="slot" data-slot="${i}" style="left:${s.x}%;top:${s.y}%">
         <button type="button" class="tok${i===0?" k":""}${outs.has(p.id)?" out":""}${isSel?" sel":""}" data-src="field" data-slot="${i}" data-p="${p.id}" aria-label="${esc(p.name)}, ${esc(s.label)}"><i class="pos">${esc(s.label)}</i>${badge(p)}</button>
-        <span class="nm">${esc(shortName(p.name))}</span><span class="tm" data-time-for="${p.id}">${fmt(T(p.id))}</span></div>`;
+        <span class="nm">${esc(shortName(p.name))}${mg[p.id]?`<span class="ball" aria-label="${mg[p.id]} mål">${mg[p.id]}</span>`:""}</span><span class="tm" data-time-for="${p.id}">${fmt(T(p.id))}</span></div>`;
     }
     return `<div class="slot" data-slot="${i}" style="left:${s.x}%;top:${s.y}%">
       <button type="button" class="empty${isSel?" sel":""}" data-src="empty" data-slot="${i}" aria-label="Ledig plass ${esc(s.label)}">${esc(s.label)}</button>
       <span class="nm">Ledig</span></div>`;
   }).join("");
   const h=$("hint");
-  if(pickFor){
+  if(pickFor&&pickFor.side==="goal"){
+    h.innerHTML=`<span style="flex:1;min-width:0"><b>Mål!</b> Trykk på spilleren som scoret.</span><button class="btn" type="button" id="btn-goal-unknown">Vet ikke</button><button class="btn" type="button" id="btn-cancel">Avbryt</button>`;
+    h.hidden=false;
+  }else if(pickFor){
     const nr=plan().length>1?" i bytte "+(pickFor.r+1):"";
     const txt=pickFor.side==="out"?`Trykk på spilleren på banen som skal ut${nr}.`:`Trykk på innbytteren som skal inn${nr}.`;
     h.innerHTML=`<span style="flex:1;min-width:0">${txt}</span><button class="btn" type="button" id="btn-cancel">Avbryt</button>`;
@@ -553,13 +701,74 @@ function renderRoster(){
   $("tabcount").textContent=m?"("+m+")":"";
   $("pickn").textContent=m;$("pickbar").hidden=!n;
   const q=($("rsearch").value||"").trim().toLowerCase();
+  const sc=seasonCount();
   const shown=q?roster.filter(p=>p.name.toLowerCase().includes(q)||String(p.nr)===q):roster;
   $("roster").innerHTML=n?(shown.length?"":`<p class="note">Ingen spillere passer søket.</p>`)+shown.map(p=>{
     const inn=S.picked.includes(p.id);
     const del=!editMode?"":'<span class="delcell">'+(confirmDel===p.id?`<button class="btn small danger" type="button" data-del="${p.id}">Bekreft</button>`:`<button class="btn small ghost" type="button" data-askdel="${p.id}" aria-label="Slett ${esc(p.name)}">Slett</button>`)+'</span>';
     return `<div class="rrow${inn?" on":""}${editMode?" edit":""}"><input type="checkbox" id="chk-${p.id}" data-toggle="${p.id}" ${inn?"checked":""} aria-label="${esc(p.name)} er med">
-      <label class="rn" for="chk-${p.id}">${p.nr!==""?esc(p.nr):"–"}</label><label class="rname" for="chk-${p.id}">${esc(p.name)}</label>${del}</div>`;
+      <label class="rn" for="chk-${p.id}">${p.nr!==""?esc(p.nr):"–"}</label><label class="rname" for="chk-${p.id}">${esc(p.name)}${sc[p.id]?` <span class="ball" aria-label="${sc[p.id]} mål">${sc[p.id]}</span>`:""}</label>${del}</div>`;
   }).join(""):`<p class="note" style="margin:0">Ingen spillere ennå. Legg dem inn under, én og én eller mange på en gang.</p>`;
+}
+function renderScore(){
+  const opps=[...new Map(matches.map(m=>[String(m.opp||"").toLowerCase(),m.opp])).values()].filter(Boolean).sort((a,b)=>a.localeCompare(b,"nb"));
+  $("opps").innerHTML=opps.map(o=>`<option value="${esc(o)}"></option>`).join("");
+  const ended=S.halfClock>=S.halfLen*60&&S.half>=S.halves;
+  const sb=$("savebar");sb.classList.toggle("done",saveFlash);
+  $("btn-save").textContent=S.matchId?"Oppdater lagret kamp":"Lagre kampen";
+  $("btn-save").className="btn small"+(ended&&!S.matchId?" primary":"");
+  $("savenote").textContent=saveFlash?"Kampen er lagret under Kamper.":(S.matchId?"Kampen er lagret. Har du endret noe, trykker du Oppdater.":(ended?"Kampen er ferdig. Lagre den, så havner den i historikken.":"Lagre kampen når den er ferdig, så havner den i historikken under Kamper."));
+  const us=S.goals.filter(g=>!g.them).length;
+  $("sc-us").textContent=us;$("sc-them").textContent=S.opp;
+  if(document.activeElement!==$("opp-name"))$("opp-name").value=S.oppName;
+  const gb=$("btn-goal-us");const picking=pickFor&&pickFor.side==="goal";
+  gb.textContent=picking?"Velg målscorer …":"Mål Søreide";
+  $("goallist").innerHTML=S.goals.slice().reverse().map(g=>{
+    const p=g.pid&&byId(g.pid);
+    const who=g.them?(esc(S.oppName||"Motstander")+" scoret"):(p?esc(p.name):"Ukjent målscorer");
+    return `<li><span class="min">${g.min}'</span><span class="gn${g.them?" them":""}">${who}</span><button class="rm" type="button" data-rmgoal="${g.id}" aria-label="Fjern mål">Fjern</button></li>`;
+  }).join("");
+}
+function resOf(m){return m.us>m.them?"S":m.us<m.them?"T":"U"}
+const fmtDate=d=>{try{return new Date(d+"T12:00:00").toLocaleDateString("nb-NO",{day:"numeric",month:"short",year:"numeric"})}catch(e){return d}};
+function renderHist(){
+  const all=matches.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))||(b.saved||0)-(a.saved||0));
+  const cnt=k=>all.filter(m=>resOf(m)===k).length;
+  const gf=all.reduce((a,m)=>a+(m.us||0),0), ga=all.reduce((a,m)=>a+(m.them||0),0);
+  $("hsum").innerHTML=all.length?`<div><span class="big">${all.length}</span><span class="lab">Kamper</span></div><div><span class="big">${cnt("S")}</span><span class="lab">Seier</span></div><div><span class="big">${cnt("U")}</span><span class="lab">Uavgjort</span></div><div><span class="big">${cnt("T")}</span><span class="lab">Tap</span></div><div><span class="big">${gf}–${ga}</span><span class="lab">Målforskjell</span></div>`
+    :`<p class="note" style="margin:0">Ingen kamper lagret ennå. Skriv inn motstanderen på Kamp-siden og trykk «Lagre kampen» når kampen er ferdig.</p>`;
+  const q=($("hsearch").value||"").trim().toLowerCase();
+  const groups=new Map();
+  all.forEach(m=>{const k=String(m.opp||"Ukjent").trim().toLowerCase();if(!groups.has(k))groups.set(k,{name:m.opp||"Ukjent",ms:[]});groups.get(k).ms.push(m)});
+  const gl=[...groups.values()].filter(g=>!q||g.name.toLowerCase().includes(q));
+  $("histnote").textContent=groups.size?groups.size+" lag":"";
+  const openKey=renderHist.open||"";
+  $("hist").innerHTML=all.length?(gl.length?gl.map(g=>{
+    const s=g.ms.filter(m=>resOf(m)==="S").length,u=g.ms.filter(m=>resOf(m)==="U").length,t=g.ms.filter(m=>resOf(m)==="T").length;
+    const f=g.ms.reduce((a,m)=>a+(m.us||0),0),a=g.ms.reduce((x,m)=>x+(m.them||0),0);
+    const key=g.name.toLowerCase();
+    return `<details class="opp" data-opp="${esc(key)}"${openKey===key?" open":""}><summary><span class="on">${esc(g.name)}</span><span class="rec">${g.ms.slice(0,5).map(m=>`<span class="res ${resOf(m)}" title="${m.us}–${m.them}">${resOf(m)}</span>`).join("")}</span>
+      <span class="meta">${g.ms.length} ${g.ms.length===1?"kamp":"kamper"} · ${s} S · ${u} U · ${t} T · mål ${f}–${a}</span></summary>
+      <div class="mlist">${g.ms.map(m=>{
+        const sc={};let unk=0;(m.goals||[]).forEach(x=>{if(x.pid)sc[x.pid]=(sc[x.pid]||0)+1;else unk++});
+        const scorers=Object.entries(sc).sort((a,b)=>b[1]-a[1]).map(([pid,n])=>{const p=byId(pid);return esc(p?shortName(p.name):"Tidligere spiller")+(n>1?" "+n:"")});
+        if(unk)scorers.push("ukjent"+(unk>1?" "+unk:""));
+        const nPlayed=Object.keys(m.played||{}).length;
+        const del=delMatch===m.id?`<button class="btn small danger mdel" type="button" data-delmatch="${m.id}">Bekreft sletting</button>`:`<button class="btn small ghost mdel" type="button" data-askdelmatch="${m.id}">Slett</button>`;
+        return `<div class="m"><div class="mh"><span class="res ${resOf(m)}">${resOf(m)}</span><span class="ms">${m.us}–${m.them}</span><span class="md">${esc(fmtDate(m.date))}${m.format?" · "+esc(m.format)+"er "+esc(m.formation||""):""}</span>${del}</div>
+          <div class="mx"><b>Mål:</b> ${scorers.length?scorers.join(", "):"ingen"}</div>
+          ${nPlayed?`<div class="mx md">${nPlayed} spillere brukt</div>`:""}</div>`;
+      }).join("")}</div></details>`;
+  }).join(""):`<p class="note">Ingen lag passer søket.</p>`):"";
+}
+function renderSeason(){
+  const c=seasonCount();
+  const list=roster.filter(p=>c[p.id]).sort((a,b)=>c[b.id]-c[a.id]||a.name.localeCompare(b.name,"nb"));
+  const tot=Object.values(c).reduce((a,b)=>a+b,0);
+  $("seasonnote").textContent=tot?tot+" mål totalt":"";
+  $("scorers").innerHTML=list.length?list.map((p,i)=>`<div class="scorer"><span class="rank">${i===0||c[p.id]!==c[list[i-1].id]?i+1:""}</span><span class="sn">${esc(p.name)}</span><span class="sc">${c[p.id]}</span></div>`).join("")
+    :`<p class="note" style="margin:0">Ingen mål registrert ennå. Trykk «Mål Søreide» under kampen, så samles målene her gjennom sesongen.</p>`;
+  if(tab==="tropp")renderRoster();
 }
 function renderSetup(){
   $("sel-format").value=S.format;
@@ -572,8 +781,8 @@ function renderSetup(){
 function render(){
   cleanSlots();
   lastSubKey="";
-  renderSetup();renderField();renderBench();renderRoster();renderTimes();
-  $("view-kamp").hidden=tab!=="kamp";$("view-tropp").hidden=tab!=="tropp";
+  renderSetup();renderScore();renderField();renderBench();renderRoster();renderSeason();renderHist();renderTimes();
+  $("view-kamp").hidden=tab!=="kamp";$("view-tropp").hidden=tab!=="tropp";$("view-hist").hidden=tab!=="hist";$("tab-hist").setAttribute("aria-selected",tab==="hist");
   $("tab-kamp").setAttribute("aria-selected",tab==="kamp");$("tab-tropp").setAttribute("aria-selected",tab==="tropp");
 }
 
@@ -595,6 +804,11 @@ function setPlan(r,side,id){
 const same=(a,b)=>a&&b&&a.t===b.t&&(a.t==="bench"?a.pid===b.pid:a.i===b.i);
 function tap(d){
   if(!d)return;
+  if(pickFor&&pickFor.side==="goal"){
+    if(d.t==="field"&&S.slots[d.i].pid){addGoal(S.slots[d.i].pid)}
+    else if(d.t==="bench"){addGoal(d.pid)}
+    return;
+  }
   if(pickFor){
     if(pickFor.side==="out"&&d.t==="field"){setPlan(pickFor.r,"out",S.slots[d.i].pid);return}
     if(pickFor.side==="in"&&d.t==="bench"){setPlan(pickFor.r,"in",d.pid);return}
@@ -656,6 +870,10 @@ document.addEventListener("pointercancel",e=>endDrag(e,true));
 document.addEventListener("click",e=>{
   const src=e.target.closest("[data-src]");
   if(src&&e.detail===0){tap(desc(src));return} // tastatur
+  if(e.target.closest("#btn-goal-unknown")){addGoal(null);return}
+  const am=e.target.closest("[data-askdelmatch]");if(am){delMatch=am.dataset.askdelmatch;renderHist();return}
+  const dm=e.target.closest("[data-delmatch]");if(dm){deleteMatch(dm.dataset.delmatch);return}
+  const rg=e.target.closest("[data-rmgoal]");if(rg){removeGoal(rg.dataset.rmgoal);return}
   if(e.target.closest("#btn-cancel")){sel=null;pickFor=null;render();return}
   if(e.target.closest("#btn-off")){if(sel&&sel.t==="field")takeOff(sel.i);sel=null;render();return}
   const pk=e.target.closest("[data-pick]");
@@ -677,6 +895,10 @@ document.addEventListener("contextmenu",e=>{if(e.target.closest("[data-src]"))e.
 $("startbtn").onclick=startStop;
 $("tab-kamp").onclick=()=>{tab="kamp";render()};
 $("tab-tropp").onclick=()=>{tab="tropp";sel=null;pickFor=null;render()};
+$("tab-hist").onclick=()=>{tab="hist";sel=null;pickFor=null;render()};
+$("btn-save").onclick=saveMatch;
+$("hsearch").addEventListener("input",renderHist);
+$("hist").addEventListener("toggle",e=>{const d=e.target;if(d.open)renderHist.open=d.dataset.opp;else if(renderHist.open===d.dataset.opp)renderHist.open=""},true);
 $("sel-format").onchange=e=>{
   const f=e.target.value;S.format=f;S.formation=FORMATS[f].def;
   if(!S.total){S.halfLen=FORMATS[f].len}
@@ -686,12 +908,15 @@ $("sel-form").onchange=e=>{S.formation=e.target.value;S.slots=freshSlots(S.forma
 $("inp-len").onchange=e=>{const v=Math.round(+e.target.value);if(v>=1&&v<=90){S.halfLen=v;save()}render()};
 $("inp-halves").onchange=e=>{const v=Math.round(+e.target.value);if(v>=1&&v<=4){S.halves=v;if(S.half>v)S.half=v;save()}render()};
 $("btn-fill").onclick=fillTeam;
+$("btn-goal-us").onclick=()=>{pickFor=pickFor&&pickFor.side==="goal"?null:{side:"goal"};sel=null;render();if(pickFor)$("pitch").scrollIntoView({behavior:"smooth",block:"nearest"})};
+$("btn-goal-them").onclick=oppGoal;
+$("opp-name").addEventListener("change",e=>{S.oppName=e.target.value.trim().slice(0,30);save();renderScore()});
 $("btn-reset-pos").onclick=()=>{S.slots=freshSlots(S.format,S.formation,S.slots);save();render()};
 $("btn-undo").onclick=()=>{if(!S.undo)return;const u=S.undo;S.undo=null;S.slots.forEach((s,i)=>s.pid=u[i]||null);sel=null;save();render()};
 $("btn-reset").onclick=()=>{
   if(!confirmReset){confirmReset=true;renderSetup();setTimeout(()=>{confirmReset=false;renderSetup()},4000);return}
   confirmReset=false;
-  Object.assign(S,{half:1,halfClock:0,total:0,running:false,times:{},undo:null});save();render();
+  Object.assign(S,{half:1,halfClock:0,total:0,running:false,times:{},undo:null,goals:[],opp:0,oppName:"",matchId:null,matchDate:null,planIn:[],planOut:[]});save();render();
 };
 $("btn-all").onclick=()=>{S.picked=roster.map(p=>p.id);save();render()};
 $("btn-none").onclick=()=>{S.picked=[];save();render()};
