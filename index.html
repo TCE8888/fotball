@@ -238,6 +238,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
     <div class="toprow">
       <div class="brand"><b>Søreide G2015</b><span id="fmtline">7er-fotball</span></div>
       <div class="clock" aria-live="off"><span class="t" id="clk">00:00</span><span class="of" id="clkof">/ 25:00</span><span class="half" id="half">1. omgang</span></div>
+      <button class="btn danger" id="btn-reset" type="button" hidden>Stopp kamp</button>
       <button class="btn go" id="startbtn" type="button">Start</button>
     </div>
     <div class="tabs" role="tablist">
@@ -295,7 +296,6 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
           <button class="btn small" id="btn-fill" type="button">Fyll opp laget</button>
           <button class="btn small" id="btn-reset-pos" type="button">Tilbakestill plasser</button>
           <button class="btn small" id="btn-undo" type="button" hidden>Angre bytte</button>
-          <button class="btn small ghost danger" id="btn-reset" type="button" style="margin-left:auto">Nullstill kamp</button>
         </div>
         <p class="note" style="margin:4px 0 0">Dra en spiller for å flytte eller bytte. Du kan også trykke på én spiller og så på en annen.</p>
       </div>
@@ -359,7 +359,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
   <main id="view-hist" hidden>
     <div class="grid" style="grid-template-columns:minmax(0,1fr)">
       <section class="card" style="max-width:680px;width:100%">
-        <h2>Sesongen så langt</h2>
+        <h2>Sesongen så langt <span class="sp"><button class="btn small ghost danger" type="button" id="btn-wipe" hidden>Slett alle kamper og mål</button></span></h2>
         <div class="hsum" id="hsum"></div>
       </section>
       <section class="card" style="max-width:680px;width:100%">
@@ -446,7 +446,7 @@ if(!Array.isArray(S.goals))S.goals=[];if(typeof S.opp!=="number")S.opp=0;if(type
 if(!Array.isArray(S.planIn))S.planIn=[];if(!Array.isArray(S.planOut))S.planOut=[];if(!S.planN)S.planN=1;
 if(!Array.isArray(S.picked)){const ab=S.absent||[];S.picked=roster.map(p=>p.id).filter(id=>!ab.includes(id))}
 delete S.absent;
-let delMatch=null, saveFlash=false, pickFor=null, editMode=false, rosterLive=false, db=null, sel=null, tab="kamp", confirmReset=false, confirmDel=null, lastSubKey="";
+let confirmWipe=false, delMatch=null, saveFlash=false, pickFor=null, editMode=false, rosterLive=false, db=null, sel=null, tab="kamp", confirmReset=false, confirmDel=null, lastSubKey="";
 const save=()=>lsSet(SKEY,S);
 
 /* ---------- spillerlisten ---------- */
@@ -804,6 +804,8 @@ function renderScore(){
 function resOf(m){return m.us>m.them?"S":m.us<m.them?"T":"U"}
 const fmtDate=d=>{try{return new Date(d+"T12:00:00").toLocaleDateString("nb-NO",{day:"numeric",month:"short",year:"numeric"})}catch(e){return d}};
 function renderHist(){
+  $("btn-wipe").hidden=!(matches.length||seasonGoals.length);
+  if(!confirmWipe)$("btn-wipe").textContent="Slett alle kamper og mål";
   const all=matches.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))||(b.saved||0)-(a.saved||0));
   const cnt=k=>all.filter(m=>resOf(m)===k).length;
   const gf=all.reduce((a,m)=>a+(m.us||0),0), ga=all.reduce((a,m)=>a+(m.them||0),0);
@@ -848,7 +850,9 @@ function renderSetup(){
   $("sel-form").value=S.formation;
   if(document.activeElement!==$("inp-len"))$("inp-len").value=S.halfLen;
   if(document.activeElement!==$("inp-halves"))$("inp-halves").value=S.halves;
-  $("btn-reset").textContent=confirmReset?"Trykk igjen for å nullstille":"Nullstill kamp";
+  $("btn-reset").textContent=confirmReset?"Trykk igjen for å stoppe":"Stopp kamp";
+  $("btn-reset").className="btn danger"+(confirmReset?" pause":"");
+  $("btn-reset").hidden=!(S.halfClock>0||S.total>0||S.goals.length||S.opp);
 }
 function render(){
   cleanSlots();
@@ -988,7 +992,18 @@ $("btn-undo").onclick=()=>{if(!S.undo)return;const u=S.undo;S.undo=null;S.slots.
 $("btn-reset").onclick=()=>{
   if(!confirmReset){confirmReset=true;renderSetup();setTimeout(()=>{confirmReset=false;renderSetup()},4000);return}
   confirmReset=false;
+  if(!S.matchId){const ids=new Set(S.goals.map(g=>g.id));
+    if(db){ids.forEach(id=>{db.collection("goals").doc(id).delete().catch(()=>{})})}
+    else{seasonGoals=seasonGoals.filter(g=>!ids.has(g.id));lsSet(GKEY,seasonGoals)}}
   Object.assign(S,{half:1,halfClock:0,total:0,running:false,times:{},undo:null,goals:[],opp:0,oppName:"",matchId:null,matchDate:null,planIn:[],planOut:[]});save();render();
+};
+$("btn-wipe").onclick=async()=>{
+  if(!confirmWipe){confirmWipe=true;$("btn-wipe").textContent="Trykk igjen – alt slettes";setTimeout(()=>{confirmWipe=false;renderHist()},4000);return}
+  confirmWipe=false;
+  if(db){for(const m of matches.slice()){try{await db.collection("matches").doc(m.id).delete()}catch(e){}}
+    for(const g of seasonGoals.slice()){try{await db.collection("goals").doc(g.id).delete()}catch(e){}}}
+  else{matches=[];seasonGoals=[];lsSet(MKEY,matches);lsSet(GKEY,seasonGoals)}
+  S.matchId=null;S.matchDate=null;save();render();
 };
 $("btn-all").onclick=()=>{S.picked=roster.map(p=>p.id);save();render()};
 $("btn-none").onclick=()=>{S.picked=[];save();render()};
