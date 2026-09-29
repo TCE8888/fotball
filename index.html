@@ -8,6 +8,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Søreide G2015">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='46' fill='%232f7a39'/%3E%3Ccircle cx='50' cy='50' r='20' fill='none' stroke='white' stroke-width='5'/%3E%3C/svg%3E">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Søreide G2015</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -328,6 +330,10 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
         <div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="btn small ghost" type="button" id="btn-edit">Rediger liste</button></div>
       </section>
       <section class="card" style="max-width:680px;width:100%">
+        <h2>Felles lagring</h2>
+        <div id="syncbox"></div>
+      </section>
+      <section class="card" style="max-width:680px;width:100%">
         <h2>Toppscorere <span class="note" id="seasonnote"></span></h2>
         <div class="scorers" id="scorers"></div>
       </section>
@@ -346,6 +352,7 @@ details summary{cursor:pointer;font-weight:600;color:var(--accent);padding:4px 0
         </details>
         <p class="status" id="storestatus"></p>
       </section>
+      <p class="note" style="max-width:680px;width:100%;text-align:center;margin:0">Versjon 29.09 · mål og kamphistorikk</p>
     </div>
   </main>
 
@@ -513,11 +520,76 @@ function oppGoal(){S.opp++;S.goals.push({id:"o"+Date.now().toString(36),them:tru
 function seasonCount(){const c={};seasonGoals.forEach(g=>{c[g.pid]=(c[g.pid]||0)+1});return c}
 function setStatus(t){$("storestatus").textContent=t}
 
-function connectDb(){
-  rosterLive=true;sortRoster();
-  setStatus("Faste spillere ligger i appen for alle trenere. Spillere du legger til her, lagres bare på denne mobilen.");
-  render();
+function attachDb(d,okText){
+  db=d;
+  d.collection("matches").onSnapshot(snap=>{
+    matches=snap.docs.map(x=>({id:x.id,...(x.data()||{})}));lsSet(MKEY,matches);renderHist();renderScore();
+  },()=>{});
+  d.collection("goals").onSnapshot(snap=>{
+    seasonGoals=snap.docs.map(x=>({id:x.id,...(x.data()||{})})).filter(g=>g.pid);lsSet(GKEY,seasonGoals);renderSeason();
+  },()=>{});
+  d.collection("players").onSnapshot(snap=>{
+    if(snap.empty&&!(snap.metadata&&snap.metadata.fromCache)&&DEFAULT_ROSTER.length&&!attachDb.seeded){
+      attachDb.seeded=true;
+      DEFAULT_ROSTER.forEach((p,i)=>{d.collection("players").doc(p.id).set({name:p.name,nr:p.nr||"",created:Date.now()+i}).catch(()=>{})});
+      return;
+    }
+    roster=snap.docs.map(x=>{const v=x.data()||{};return {id:x.id,name:String(v.name||""),nr:v.nr==null?"":String(v.nr)}}).filter(p=>p.name);
+    sortRoster();rosterLive=true;lsSet(RKEY,roster);
+    setStatus(okText);
+    render();
+  },err=>{rosterLive=true;setStatus("Fikk ikke kontakt med den delte spillerlisten. Viser siste lagrede kopi.");render()});
 }
+/* ---------- felles lagring (Firebase) ---------- */
+/* Lim inn firebaseConfig fra Firebase her: */
+const FIREBASE_CONFIG=null;
+const CKEY="soreide2015-lagkode";
+function teamCode(){
+  try{const h=decodeURIComponent((location.hash||"").slice(1)).trim();
+    if(h.length>=16){localStorage.setItem(CKEY,h);history.replaceState(null,"",location.pathname+location.search)}}catch(e){}
+  try{return localStorage.getItem(CKEY)||""}catch(e){return ""}
+}
+function syncUI(state){
+  const box=$("syncbox");if(!box)return;
+  const code=teamCode();
+  if(state==="on"){
+    const link=location.origin+location.pathname+"#"+code;
+    box.innerHTML=`<p class="note" style="margin:0 0 6px"><b style="color:var(--in)">Koblet til felles lagring.</b> Spillere, mål og kamper deles med alle trenerne.</p>
+      <p class="note" style="margin:0 0 6px">Send denne lenken til en ny trener. Den kobler mobilen hans til automatisk:</p>
+      <div class="addrow"><input type="text" readonly id="sharelink" value="${esc(link)}" aria-label="Lenke med lagkode" style="flex:1 1 200px"><button class="btn small" type="button" id="btn-copylink">Kopier</button></div>
+      <button class="btn small ghost danger" type="button" id="btn-disconnect" style="margin-top:8px">Koble fra denne mobilen</button>`;
+  }else if(state==="nocfg"){
+    box.innerHTML=`<p class="note" style="margin:0">Felles lagring er ikke satt opp ennå. Alt lagres bare på denne mobilen.</p>`;
+  }else{
+    box.innerHTML=`<p class="note" style="margin:0 0 6px">Skriv inn lagkoden for å dele spillere, mål og kamper med de andre trenerne.</p>
+      <form class="addrow" id="codeform"><input type="text" id="codeinput" placeholder="Lagkode" aria-label="Lagkode" autocomplete="off" style="flex:1 1 200px"><button class="btn primary" type="submit">Koble til</button></form>`;
+  }
+}
+function connectDb(){
+  const code=teamCode();
+  if(!FIREBASE_CONFIG||!window.firebase){roster=localRoster();sortRoster();rosterLive=true;setStatus("");syncUI("nocfg");render();return}
+  if(!code){roster=localRoster();sortRoster();rosterLive=true;setStatus("");syncUI("off");render();return}
+  try{
+    if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
+    const fs=firebase.firestore();
+    try{fs.enablePersistence({synchronizeTabs:true}).catch(()=>{})}catch(e){}
+    const base="teams/"+code;
+    attachDb({collection:n=>fs.collection(base+"/"+n)},"");
+    syncUI("on");
+  }catch(e){roster=localRoster();sortRoster();rosterLive=true;setStatus("Fikk ikke koblet til felles lagring. Alt lagres på denne mobilen inntil videre.");syncUI("off");render()}
+}
+document.addEventListener("submit",e=>{
+  if(e.target.id!=="codeform")return;e.preventDefault();
+  const v=$("codeinput").value.trim();
+  if(v.length<16){$("codeinput").setCustomValidity("Lagkoden er minst 16 tegn.");$("codeinput").reportValidity();return}
+  try{localStorage.setItem(CKEY,v)}catch(e){}
+  location.reload();
+});
+document.addEventListener("click",e=>{
+  if(e.target.id==="btn-copylink"){const i=$("sharelink");
+    (navigator.clipboard?navigator.clipboard.writeText(i.value):Promise.reject()).then(()=>{e.target.textContent="Kopiert"},()=>{i.select()})}
+  if(e.target.id==="btn-disconnect"){try{localStorage.removeItem(CKEY)}catch(x){}location.reload()}
+});
 
 /* ---------- avledede verdier ---------- */
 function squad(){return roster.filter(p=>S.picked.includes(p.id))}
